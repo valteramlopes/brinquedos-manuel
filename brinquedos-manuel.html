@@ -599,6 +599,9 @@
   // ── INIT ──────────────────────────────────────────────
   async function init() { await renderGrid(); }
 
+  // Arrancar a app automaticamente
+  init();
+
   // ── SERVICE WORKER (PWA) ──────────────────────────────
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
