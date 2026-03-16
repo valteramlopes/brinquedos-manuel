@@ -1,4 +1,4 @@
-const CACHE = 'brinquedos-v1';
+const CACHE = 'brinquedos-v2';
 const ASSETS = [
   './brinquedos-manuel.html',
   './manifest.json'
