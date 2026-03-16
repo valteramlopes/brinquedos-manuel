@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Os Brinquedos do Manuel</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#e8734a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Manu" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Nunito+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f5f2ee;
+      --surface: #ffffff;
+      --surface2: #faf8f5;
+      --border: #e8e2d9;
+      --text: #2d2820;
+      --text-muted: #8a7f74;
+      --accent: #e8734a;
+      --accent-light: #fdf0eb;
+      --green: #5a9e6f;
+      --green-light: #edf7f1;
+      --yellow: #d4a017;
+      --yellow-light: #fdf8e7;
+      --red: #c0392b;
+      --red-light: #fdf0ee;
+      --shadow: 0 2px 12px rgba(45,40,32,0.08);
+      --shadow-hover: 0 8px 32px rgba(45,40,32,0.14);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── PASSWORD SCREEN ── */
+    #lock-screen {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .lock-card {
+      background: var(--surface);
+      border-radius: 24px;
+      padding: 48px 40px;
+      box-shadow: var(--shadow-hover);
+      width: 340px;
+      text-align: center;
+    }
+    .lock-emoji { font-size: 48px; margin-bottom: 12px; }
+    .lock-card h2 {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      font-size: 1.4rem;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+    .lock-card p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+    }
+    .lock-card input {
+      width: 100%;
+      padding: 14px 18px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      font-family: 'Nunito Sans', sans-serif;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 14px;
+      background: var(--surface2);
+    }
+    .lock-card input:focus { border-color: var(--accent); }
+    .lock-card button {
+      width: 100%;
+      padding: 14px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .lock-card button:hover { opacity: 0.9; transform: translateY(-1px); }
+    .lock-error {
+      color: var(--red);
+      font-size: 0.8rem;
+      margin-top: 10px;
+      min-height: 18px;
+    }
+
+    /* ── MAIN APP ── */
+    #app { display: none; }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 24px;
+      position: sticky; top: 0; z-index: 10;
+    }
+    .header-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .header-title {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .header-title .emoji { font-size: 28px; }
+    .header-title h1 {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 900;
+      font-size: 1.35rem;
+      color: var(--text);
+      line-height: 1.2;
+    }
+    .header-title span {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .suggest-btn {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 20px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 16px rgba(232,115,74,0.3);
+      white-space: nowrap;
+    }
+    .suggest-btn:hover {
+      opacity: 0.9; transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(232,115,74,0.35);
+    }
+    .suggest-btn:active { transform: translateY(0); }
+
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 28px 20px 60px;
+    }
+
+    /* ── SUGGESTION MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(45,40,32,0.5);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    .modal-overlay.active { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--surface);
+      border-radius: 24px;
+      padding: 40px 36px;
+      width: 340px;
+      text-align: center;
+      box-shadow: var(--shadow-hover);
+      transform: scale(0.9);
+      transition: transform 0.25s;
+    }
+    .modal-overlay.active .modal { transform: scale(1); }
+    .modal-spinning {
+      font-size: 3rem;
+      display: block;
+      margin-bottom: 8px;
+      animation: spin-emoji 0.4s steps(6) infinite;
+    }
+    @keyframes spin-emoji {
+      from { opacity: 0.4; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1.1); }
+    }
+    .modal-result-img {
+      width: 120px; height: 120px;
+      object-fit: cover;
+      border-radius: 16px;
+      margin: 0 auto 16px;
+      display: block;
+      border: 3px solid var(--accent-light);
+    }
+    .modal-placeholder {
+      width: 120px; height: 120px;
+      border-radius: 16px;
+      margin: 0 auto 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem;
+      background: var(--surface2);
+      border: 2px dashed var(--border);
+    }
+    .modal h3 {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 900;
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+    }
+    .modal p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+    .modal-actions { display: flex; gap: 10px; }
+    .modal-actions button {
+      flex: 1;
+      padding: 12px;
+      border-radius: 12px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      border: 2px solid transparent;
+    }
+    .btn-play {
+      background: var(--accent); color: white;
+      border-color: var(--accent);
+    }
+    .btn-play:hover { opacity: 0.85; }
+    .btn-respin {
+      background: var(--surface2); color: var(--text);
+      border-color: var(--border);
+    }
+    .btn-respin:hover { opacity: 0.7; }
+    .btn-close-modal {
+      position: absolute; top: 16px; right: 16px;
+      background: var(--surface2);
+      border: none; border-radius: 50%;
+      width: 32px; height: 32px;
+      cursor: pointer; font-size: 1rem;
+      color: var(--text-muted);
+    }
+    .modal { position: relative; }
+
+    /* ── GRID ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: flex; flex-direction: column;
+      transition: box-shadow 0.2s, transform 0.2s;
+      border: 1.5px solid var(--border);
+      position: relative;
+    }
+    .card:hover {
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-3px);
+    }
+
+    .card-img {
+      width: 100%; aspect-ratio: 1/1;
+      object-fit: cover;
+      background: var(--surface2);
+    }
+    .card-img-placeholder {
+      width: 100%; aspect-ratio: 1/1;
+      background: var(--surface2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem;
+    }
+
+    .card-body {
+      padding: 12px 14px 14px;
+      display: flex; flex-direction: column; gap: 8px;
+      flex: 1;
+    }
+    .card-name {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      font-size: 0.95rem;
+      line-height: 1.3;
+    }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 0.75rem; font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 99px;
+      width: fit-content;
+    }
+    .badge-green  { background: var(--green-light);  color: var(--green); }
+    .badge-yellow { background: var(--yellow-light); color: var(--yellow); }
+    .badge-red    { background: var(--red-light);    color: var(--red); }
+
+    .card-footer {
+      padding: 0 14px 14px;
+    }
+    .play-btn {
+      width: 100%;
+      padding: 9px;
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      font-size: 0.82rem;
+      cursor: pointer;
+      color: var(--text);
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .play-btn:hover {
+      background: var(--accent-light);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ── CONFETTI ── */
+    .confetti-container {
+      position: fixed; inset: 0; pointer-events: none; z-index: 999;
+      overflow: hidden;
+    }
+    .confetti-dot {
+      position: absolute;
+      width: 8px; height: 8px;
+      border-radius: 2px;
+      animation: fall 1s ease-in forwards;
+    }
+    @keyframes fall {
+      0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--text);
+      color: white;
+      padding: 12px 22px;
+      border-radius: 12px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      z-index: 200;
+      transition: transform 0.3s, opacity 0.3s;
+      opacity: 0;
+      box-shadow: var(--shadow-hover);
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    @media (max-width: 480px) {
+      .grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      header { padding: 14px 16px; }
+      main { padding: 20px 14px 50px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- PASSWORD SCREEN -->
+<div id="lock-screen">
+  <div class="lock-card">
+    <div class="lock-emoji">🧸</div>
+    <h2>Os Brinquedos do Manuel</h2>
+    <p>Introduz a password para entrar</p>
+    <input type="password" id="pwd-input" placeholder="Password" autocomplete="current-password" />
+    <button onclick="checkPassword()">Entrar</button>
+    <div class="lock-error" id="lock-error"></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <header>
+    <div class="header-inner">
+      <div class="header-title">
+        <span class="emoji">🎮</span>
+        <h1>Os Brinquedos do Manuel<span>Rastreador de brinquedos</span></h1>
+      </div>
+      <button class="suggest-btn" onclick="openSuggest()">
+        🎲 Sugerir brinquedo
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <div class="grid" id="grid"></div>
+  </main>
+</div>
+
+<!-- SUGGESTION MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <button class="btn-close-modal" onclick="closeModal()">✕</button>
+    <div id="modal-content"></div>
+    <div class="modal-actions" id="modal-actions"></div>
+  </div>
+</div>
+
+<!-- CONFETTI -->
+<div class="confetti-container" id="confetti"></div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── CONFIG ──────────────────────────────────────────
+  const PASSWORD = "manuel2026"; // ← muda aqui a password
+
+  const TOYS = [
+    { id: 1,  name: "VinciBot",             emoji: "🤖", img: "" },
+    { id: 2,  name: "Playmobil: Futebol",   emoji: "⚽", img: "" },
+    { id: 3,  name: "Hot Wheels",           emoji: "🚗", img: "" },
+    { id: 4,  name: "Legos",                emoji: "🧱", img: "" },
+    { id: 5,  name: "Robot Solar",          emoji: "☀️", img: "" },
+    { id: 6,  name: "Cubo Rubik",           emoji: "🎲", img: "" },
+    { id: 7,  name: "Livros",               emoji: "📚", img: "" },
+    { id: 8,  name: "Jogos de Tabuleiro",   emoji: "♟️", img: "" },
+    { id: 9,  name: "Bobie Goods",          emoji: "🎨", img: "" },
+    { id: 10, name: "Kit de Ciências",      emoji: "🔬", img: "" },
+    { id: 11, name: "Animais da Terra",     emoji: "🦁", img: "" },
+    { id: 12, name: "Livros de Atividades", emoji: "✏️", img: "" },
+    { id: 13, name: "Bateria",              emoji: "🥁", img: "" },
+    { id: 14, name: "Peluches",             emoji: "🧸", img: "" },
+    { id: 15, name: "Puzzles",              emoji: "🧩", img: "" },
+    { id: 16, name: "Brickit",              emoji: "🏗️", img: "" },
+  ];
+  // ────────────────────────────────────────────────────
+
+  // ── PASSWORD ─────────────────────────────────────────
+  document.getElementById('pwd-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') checkPassword();
+  });
+
+  function checkPassword() {
+    const val = document.getElementById('pwd-input').value;
+    if (val === PASSWORD) {
+      document.getElementById('lock-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      init();
+    } else {
+      document.getElementById('lock-error').textContent = 'Password incorreta. Tenta novamente.';
+      document.getElementById('pwd-input').value = '';
+      document.getElementById('pwd-input').focus();
+    }
+  }
+
+  // ── STATE ─────────────────────────────────────────────
+  const STORAGE_KEY = 'manuel_brinquedos_v1';
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch { return {}; }
+  }
+
+  function saveState(state) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function daysSince(isoDate) {
+    if (!isoDate) return null;
+    const diff = Date.now() - new Date(isoDate).getTime();
+    return Math.floor(diff / 86400000);
+  }
+
+  // ── RENDER ────────────────────────────────────────────
+  function badgeFor(days) {
+    if (days === null) return { cls: 'badge-red',    label: 'Nunca usado' };
+    if (days === 0)    return { cls: 'badge-green',  label: 'Hoje! 🎉' };
+    if (days <= 7)     return { cls: 'badge-green',  label: `Há ${days} dia${days>1?'s':''}` };
+    if (days <= 21)    return { cls: 'badge-yellow', label: `Há ${days} dias` };
+    return               { cls: 'badge-red',    label: `Há ${days} dias` };
+  }
+
+  function renderGrid() {
+    const state = loadState();
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+
+    TOYS.forEach(toy => {
+      const lastUsed = state[toy.id] || null;
+      const days = daysSince(lastUsed);
+      const badge = badgeFor(days);
+
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      const imgHTML = toy.img
+        ? `<img class="card-img" src="${toy.img}" alt="${toy.name}" loading="lazy" />`
+        : `<div class="card-img-placeholder">${toy.emoji}</div>`;
+
+      card.innerHTML = `
+        ${imgHTML}
+        <div class="card-body">
+          <div class="card-name">${toy.name}</div>
+          <span class="badge ${badge.cls}">${badge.label}</span>
+        </div>
+        <div class="card-footer">
+          <button class="play-btn" onclick="markPlayed(${toy.id})">
+            ✋ Brinquei hoje!
+          </button>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  // ── MARK PLAYED ───────────────────────────────────────
+  function markPlayed(id) {
+    const state = loadState();
+    state[id] = new Date().toISOString();
+    saveState(state);
+    renderGrid();
+    const toy = TOYS.find(t => t.id === id);
+    showToast(`${toy.emoji} ${toy.name} marcado!`);
+    launchConfetti();
+  }
+
+  // ── SUGGESTION ────────────────────────────────────────
+  function openSuggest() {
+    const state = loadState();
+    showSpinning();
+    document.getElementById('modal-overlay').classList.add('active');
+
+    setTimeout(() => {
+      const toy = pickWeighted(state);
+      showResult(toy, state);
+    }, 900);
+  }
+
+  function pickWeighted(state) {
+    const weights = TOYS.map(toy => {
+      const days = daysSince(state[toy.id] || null);
+      if (days === null) return { toy, w: 60 };
+      if (days === 0)    return { toy, w: 2 };
+      return { toy, w: Math.min(days + 5, 60) };
+    });
+    const total = weights.reduce((s, x) => s + x.w, 0);
+    let r = Math.random() * total;
+    for (const { toy, w } of weights) {
+      r -= w;
+      if (r <= 0) return toy;
+    }
+    return weights[weights.length - 1].toy;
+  }
+
+  function showSpinning() {
+    document.getElementById('modal-content').innerHTML = `
+      <span class="modal-spinning">🎲</span>
+      <h3>A sortear...</h3>
+      <p>Qual será o escolhido?</p>
+    `;
+    document.getElementById('modal-actions').innerHTML = '';
+  }
+
+  function showResult(toy, state) {
+    const days = daysSince(state[toy.id] || null);
+    const badge = badgeFor(days);
+    const imgHTML = toy.img
+      ? `<img class="modal-result-img" src="${toy.img}" alt="${toy.name}" />`
+      : `<div class="modal-placeholder">${toy.emoji}</div>`;
+
+    document.getElementById('modal-content').innerHTML = `
+      ${imgHTML}
+      <h3>${toy.name}</h3>
+      <p><span class="badge ${badge.cls}" style="display:inline-flex;margin:0 auto 4px;">${badge.label}</span></p>
+    `;
+    document.getElementById('modal-actions').innerHTML = `
+      <button class="btn-respin" onclick="respin()">🔄 Outro</button>
+      <button class="btn-play" onclick="markPlayedFromModal(${toy.id})">✋ Vamos brincar!</button>
+    `;
+    window._suggestedToy = toy;
+  }
+
+  function respin() {
+    const state = loadState();
+    showSpinning();
+    setTimeout(() => {
+      const toy = pickWeighted(state);
+      showResult(toy, state);
+    }, 900);
+  }
+
+  function markPlayedFromModal(id) {
+    markPlayed(id);
+    closeModal();
+  }
+
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('active');
+  }
+
+  document.getElementById('modal-overlay').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  // ── CONFETTI ──────────────────────────────────────────
+  const COLORS = ['#e8734a','#5a9e6f','#d4a017','#4a90c8','#c06090'];
+
+  function launchConfetti() {
+    const container = document.getElementById('confetti');
+    for (let i = 0; i < 28; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'confetti-dot';
+      dot.style.cssText = `
+        left: ${Math.random()*100}%;
+        top: -10px;
+        background: ${COLORS[Math.floor(Math.random()*COLORS.length)]};
+        animation-delay: ${Math.random()*0.4}s;
+        animation-duration: ${0.8 + Math.random()*0.5}s;
+        width: ${6+Math.random()*6}px;
+        height: ${6+Math.random()*6}px;
+      `;
+      container.appendChild(dot);
+      setTimeout(() => dot.remove(), 1500);
+    }
+  }
+
+  // ── TOAST ─────────────────────────────────────────────
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // ── INIT ──────────────────────────────────────────────
+  function init() { renderGrid(); }
+
+  // ── SERVICE WORKER (PWA) ──────────────────────────────
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>
