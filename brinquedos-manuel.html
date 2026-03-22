@@ -416,8 +416,8 @@
   }
 
   async function saveState(toyId, isoDate) {
-    // Try update first; if no rows affected, insert
-    const updateRes = await fetch(
+    // Try PATCH first (update existing record)
+    const patchRes = await fetch(
       `${SUPABASE_URL}/rest/v1/brinquedos?toy_id=eq.${toyId}`,
       {
         method: 'PATCH',
@@ -430,9 +430,11 @@
         body: JSON.stringify({ last_used: isoDate })
       }
     );
-    const updated = await updateRes.json();
-    if (!Array.isArray(updated) || updated.length === 0) {
-      // No existing record, insert new one
+    const patchText = await patchRes.text();
+    const patchData = patchText ? JSON.parse(patchText) : [];
+
+    if (!Array.isArray(patchData) || patchData.length === 0) {
+      // Record doesn't exist yet, insert it
       await fetch(`${SUPABASE_URL}/rest/v1/brinquedos`, {
         method: 'POST',
         headers: {
@@ -443,7 +445,7 @@
         body: JSON.stringify({ toy_id: toyId, last_used: isoDate })
       });
     }
-    if (_stateCache) _stateCache[toyId] = isoDate;
+    _stateCache = null; // invalidate cache
   }
 
   function daysSince(isoDate) {
