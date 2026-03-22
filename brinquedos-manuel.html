@@ -416,11 +416,33 @@
   }
 
   async function saveState(toyId, isoDate) {
-    await sbFetch('brinquedos', {
-      method: 'POST',
-      prefer: 'resolution=merge-duplicates',
-      body: JSON.stringify({ toy_id: toyId, last_used: isoDate })
-    });
+    // Try update first; if no rows affected, insert
+    const updateRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/brinquedos?toy_id=eq.${toyId}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({ last_used: isoDate })
+      }
+    );
+    const updated = await updateRes.json();
+    if (!Array.isArray(updated) || updated.length === 0) {
+      // No existing record, insert new one
+      await fetch(`${SUPABASE_URL}/rest/v1/brinquedos`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ toy_id: toyId, last_used: isoDate })
+      });
+    }
     if (_stateCache) _stateCache[toyId] = isoDate;
   }
 
